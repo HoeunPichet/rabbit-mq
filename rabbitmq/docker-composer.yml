@@ -1,0 +1,87 @@
+version: "3.9"
+
+services:
+  rabbitmq1:
+    image: rabbitmq:3.13-management
+    hostname: rabbitmq1
+    container_name: rabbitmq1
+    environment:
+      RABBITMQ_ERLANG_COOKIE: secret123
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+      RABBITMQ_DEFAULT_VHOST: my_vhost
+      RABBITMQ_NODENAME: rabbit@rabbitmq1
+    volumes:
+      - rabbitmq1_data:/var/lib/rabbitmq
+    networks:
+      - rabbitmq_net
+
+  rabbitmq2:
+    image: rabbitmq:3.13-management
+    hostname: rabbitmq2
+    container_name: rabbitmq2
+    environment:
+      RABBITMQ_ERLANG_COOKIE: secret123
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+      RABBITMQ_DEFAULT_VHOST: my_vhost
+      RABBITMQ_NODENAME: rabbit@rabbitmq2
+    volumes:
+      - rabbitmq2_data:/var/lib/rabbitmq
+    networks:
+      - rabbitmq_net
+
+  rabbitmq3:
+    image: rabbitmq:3.13-management
+    hostname: rabbitmq3
+    container_name: rabbitmq3
+    environment:
+      RABBITMQ_ERLANG_COOKIE: secret123
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+      RABBITMQ_DEFAULT_VHOST: my_vhost
+      RABBITMQ_NODENAME: rabbit@rabbitmq3
+    volumes:
+      - rabbitmq3_data:/var/lib/rabbitmq
+    networks:
+      - rabbitmq_net
+
+  haproxy:
+    image: haproxy:2.8
+    container_name: haproxy
+    ports:
+      - "5672:5672"     # AMQP load balanced
+      - "15672:15672"   # Management UI (load balanced)
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    depends_on:
+      - rabbitmq1
+      - rabbitmq2
+      - rabbitmq3
+    networks:
+      - rabbitmq_net
+
+networks:
+  rabbitmq_net:
+    driver: bridge
+
+volumes:
+  rabbitmq1_data:
+  rabbitmq2_data:
+  rabbitmq3_data:
+
+#services:       # Define the services (containers) that make up your application
+#  rabbitmq:     # Name of the service (container will also use this name in DNS)
+#    image: rabbitmq:3.13-management-alpine  # Use the official RabbitMQ image with management plugin
+#    container_name: rabbitmq      # Name of the running container (optional)
+#    ports:
+#      - "5672:5672"   # Expose RabbitMQ broker port (used by applications/clients)
+#      - "15672:15672" # Expose management web UI port (http://localhost:15672)
+#    environment:
+#      RABBITMQ_DEFAULT_USER: admin     # Create a default user with username "admin"
+#      RABBITMQ_DEFAULT_PASS: admin     # Default password for the user
+#    volumes:
+#      - rabbitmq_data:/var/lib/rabbitmq  # Persist RabbitMQ data so it survives restarts
+#
+#volumes:        # Named volumes (stored on your host machine, managed by Docker)
+#  rabbitmq_data:  # This is where persistent data will be saved
